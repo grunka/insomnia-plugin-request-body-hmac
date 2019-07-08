@@ -13,7 +13,7 @@ function hmac(content) {
 }
 
 module.exports.templateTags = [{
-  name: 'hmac',
+  name: 'request-body-hmac',
   displayName: 'Request body HMAC',
   description: 'HMAC a value or the request body',
   args: [
