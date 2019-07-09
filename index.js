@@ -77,5 +77,8 @@ module.exports.requestHooks = [
         context.request.setHeader(h.name, h.value.replace(replacementContent, hmac(context.request.getBodyText())));
       }
     });
+    if (context.request.getUrl().indexOf(replacementContent) !== -1) {
+      context.request.setUrl(context.request.getUrl().replace(replacementContent, hmac(context.request.getBodyText())));
+    }
   }
 ];
