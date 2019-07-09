@@ -4,10 +4,14 @@ const replacementContent = 'Will be replaced with HMAC of request body';
 const settings = {
   key: null,
   algorithm: null,
-  encoding: null
+  encoding: null,
+  removeWhitespace: false
 };
 
 function hmac(content) {
+  if (settings.removeWhitespace) {
+    content = JSON.stringify(JSON.parse(content));
+  }
   const hash = crypto.createHmac(settings.algorithm, settings.key);
   hash.update(content, 'utf8');
   return hash.digest(settings.encoding);
@@ -38,6 +42,15 @@ module.exports.templateTags = [{
       ]
     },
     {
+      displayName: 'Remove whitespace from JSON',
+      description: 'Parse and stringify JSON request body to remove any whitespace',
+      type: 'enum',
+      options: [
+        { displayName: 'No', value: false },
+        { displayName: 'Yes', value: true }
+      ]
+    },
+    {
       displayName: 'Key',
       type: 'string',
       placeholder: 'HMAC Secret Key'
@@ -48,7 +61,7 @@ module.exports.templateTags = [{
       placeholder: 'Message to hash (leave empty to use request body)'
     }
   ],
-  run(context, algorithm, encoding, key = '', value = '') {
+  run(context, algorithm, encoding, removeWhitespace = false, key = '', value = '') {
     if (encoding !== 'hex' && encoding !== 'base64') {
       throw new Error(`Invalid encoding ${encoding}. Choices are hex, base64`);
     }
@@ -61,6 +74,7 @@ module.exports.templateTags = [{
     settings.key = key;
     settings.algorithm = algorithm;
     settings.encoding = encoding;
+    settings.removeWhitespace = removeWhitespace;
     
     if (value === '') {
       return replacementContent;
