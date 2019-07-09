@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const JSONPath = require('jsonpath-plus');
+const {JSONPath} = require('jsonpath-plus');
 
 const replacementContent = 'Will be replaced with HMAC of request body';
 const settings = {
@@ -12,7 +12,11 @@ const settings = {
 
 function hmac(content) {
   if (settings.jsonPath) {
-    content = JSON.stringify(JSONPath({path: settings.jsonPath, json: JSON.parse(content)}))
+    content = JSON.stringify(JSONPath({
+      path: settings.jsonPath, 
+      json: JSON.parse(content),
+      wrap: false
+    }));
   }
   if (settings.removeWhitespace) {
     content = JSON.stringify(JSON.parse(content));
@@ -20,6 +24,10 @@ function hmac(content) {
   const hash = crypto.createHmac(settings.algorithm, settings.key);
   hash.update(content, 'utf8');
   return hash.digest(settings.encoding);
+}
+
+function replaceWithHMAC(content, body) {
+  return content.replace(new RegExp(replacementContent, 'g'), hmac(body))
 }
 
 module.exports.templateTags = [{
@@ -85,7 +93,7 @@ module.exports.templateTags = [{
     settings.key = key;
     settings.algorithm = algorithm;
     settings.encoding = encoding;
-    settings.removeWhitespace = removeWhitespace;
+    settings.removeWhitespace = removeWhitespace === true || removeWhitespace === 'true';
     settings.jsonPath = jsonPath;
     
     if (value === '') {
@@ -98,17 +106,20 @@ module.exports.templateTags = [{
 
 module.exports.requestHooks = [
   context => {
+    if (context.request.getUrl().indexOf(replacementContent) !== -1) {
+      context.request.setUrl(replaceWithHMAC(context.request.getUrl(), context.request.getBodyText()));
+    }
+    if (context.request.getBodyText().indexOf(replacementContent) !== -1) {
+      context.request.setBodyText(replaceWithHMAC(context.request.getBodyText(), context.request.getBodyText()));
+    }
     context.request.getHeaders().forEach(h => {
       if (h.value.indexOf(replacementContent) !== -1) {
-        context.request.setHeader(h.name, h.value.replace(replacementContent, hmac(context.request.getBodyText())));
+        context.request.setHeader(h.name, replaceWithHMAC(h.value, context.request.getBodyText()));
       }
     });
-    if (context.request.getUrl().indexOf(replacementContent) !== -1) {
-      context.request.setUrl(context.request.getUrl().replace(replacementContent, hmac(context.request.getBodyText())));
-    }
     context.request.getParameters().forEach(p => {
       if (p.value.indexOf(replacementContent) !== -1) {
-        context.request.setParameter(p.name, p.value.replace(replacementContent, hmac(context.request.getBodyText())));
+        context.request.setParameter(p.name, replaceWithHMAC(p.value, context.request.getBodyText()));
       }
     });
   }
