@@ -1,14 +1,19 @@
 const crypto = require('crypto');
+const JSONPath = require('jsonpath-plus');
 
 const replacementContent = 'Will be replaced with HMAC of request body';
 const settings = {
   key: null,
   algorithm: null,
   encoding: null,
+  jsonPath: null,
   removeWhitespace: false
 };
 
 function hmac(content) {
+  if (settings.jsonPath) {
+    content = JSON.stringify(JSONPath({path: settings.jsonPath, json: JSON.parse(content)}))
+  }
   if (settings.removeWhitespace) {
     content = JSON.stringify(JSON.parse(content));
   }
@@ -51,6 +56,12 @@ module.exports.templateTags = [{
       ]
     },
     {
+      displayName: 'JSONPath to object that should be hashed',
+      description: 'If hashing is to be done only to a part of the request body select it using a JSONPath query. Note: whitespace will be removed before hashing',
+      type: 'string',
+      placeholder: 'JSONPath (leave empty to not use)'
+    },
+    {
       displayName: 'Key',
       type: 'string',
       placeholder: 'HMAC Secret Key'
@@ -61,7 +72,7 @@ module.exports.templateTags = [{
       placeholder: 'Message to hash (leave empty to use request body)'
     }
   ],
-  run(context, algorithm, encoding, removeWhitespace = false, key = '', value = '') {
+  run(context, algorithm, encoding, removeWhitespace = false, jsonPath = '', key = '', value = '') {
     if (encoding !== 'hex' && encoding !== 'base64') {
       throw new Error(`Invalid encoding ${encoding}. Choices are hex, base64`);
     }
@@ -75,6 +86,7 @@ module.exports.templateTags = [{
     settings.algorithm = algorithm;
     settings.encoding = encoding;
     settings.removeWhitespace = removeWhitespace;
+    settings.jsonPath = jsonPath;
     
     if (value === '') {
       return replacementContent;
