@@ -80,5 +80,10 @@ module.exports.requestHooks = [
     if (context.request.getUrl().indexOf(replacementContent) !== -1) {
       context.request.setUrl(context.request.getUrl().replace(replacementContent, hmac(context.request.getBodyText())));
     }
+    context.request.getParameters().forEach(p => {
+      if (p.value.indexOf(replacementContent) !== -1) {
+        context.request.setParameter(p.name, p.value.replace(replacementContent, hmac(context.request.getBodyText())));
+      }
+    });
   }
 ];
