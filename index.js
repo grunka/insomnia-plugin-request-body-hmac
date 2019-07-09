@@ -50,7 +50,7 @@ module.exports.templateTags = [{
   ],
   run(context, algorithm, encoding, key = '', value = '') {
     if (encoding !== 'hex' && encoding !== 'base64') {
-      throw new Error(`Invalid encoding ${encoding}. Choices are hex, latin1, base64`);
+      throw new Error(`Invalid encoding ${encoding}. Choices are hex, base64`);
     }
 
     const valueType = typeof value;
