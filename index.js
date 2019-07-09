@@ -3,7 +3,8 @@ const crypto = require('crypto');
 const replacementContent = 'Will be replaced with HMAC of request body';
 const settings = {
   key: null,
-  algorithm: null
+  algorithm: null,
+  encoding: null
 };
 
 function hmac(content) {
