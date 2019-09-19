@@ -13,5 +13,8 @@
   "main": "index.js",
   "insomnia": {
     "name": "requestbodyhmac"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@grunka"
   }
 }
