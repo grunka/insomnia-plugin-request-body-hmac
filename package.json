@@ -18,8 +18,5 @@
     "publisher": {
       "name": "John Wästerlund"
     }
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/@grunka"
   }
 }
