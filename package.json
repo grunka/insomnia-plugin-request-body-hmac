@@ -8,7 +8,7 @@
     "url": "https://github.com/grunka/insomnia-plugin-request-body-hmac"
   },
   "dependencies": {
-    "jsonpath-plus": "0.20.1"
+    "jsonpath-plus": "4.0.0"
   },
   "main": "index.js",
   "insomnia": {
