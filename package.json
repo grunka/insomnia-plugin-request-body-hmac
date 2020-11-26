@@ -12,7 +12,12 @@
   },
   "main": "index.js",
   "insomnia": {
-    "name": "requestbodyhmac"
+    "name": "requestbodyhmac",
+    "displayName": "Request Body HMAC Signature Generator",
+    "description": "Generates HMAC signatures for request bodies and values",
+    "publisher": {
+      "name": "John Wästerlund"
+    }
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/@grunka"
