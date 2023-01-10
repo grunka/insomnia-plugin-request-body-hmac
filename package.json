@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-request-body-hmac",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "author": "John Wästerlund <john@grunka.com>",
   "description": "Insomnia template tag for HMAC signature of value or request body",
   "repository": "https://github.com/grunka/insomnia-plugin-request-body-hmac",
