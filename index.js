@@ -2,32 +2,28 @@ const crypto = require('crypto');
 const {JSONPath} = require('jsonpath-plus');
 
 const replacementContent = 'Will be replaced with HMAC of request body';
-const settings = {
-  key: null,
-  algorithm: null,
-  encoding: null,
-  jsonPath: null,
-  removeWhitespace: false
-};
 
-function hmac(content) {
-  if (settings.jsonPath) {
+function hmac(content, options) {
+  if (options.jsonPath) {
     content = JSON.stringify(JSONPath({
-      path: settings.jsonPath, 
+      path: options.jsonPath,
       json: JSON.parse(content),
       wrap: false
     }));
   }
-  if (settings.removeWhitespace) {
+  if (options.removeWhitespace) {
     content = JSON.stringify(JSON.parse(content));
   }
-  const hash = crypto.createHmac(settings.algorithm, settings.key);
+  const hash = crypto.createHmac(options.algorithm, options.key);
   hash.update(content, 'utf8');
-  return hash.digest(settings.encoding);
+  return hash.digest(options.encoding);
 }
 
 function replaceWithHMAC(content, body) {
-  return content.replace(new RegExp(replacementContent, 'g'), hmac(body))
+  return content.replace(new RegExp(replacementContent + ' \\(([a-f0-9]+)\\)', 'g'), (match, hex) => {
+    const options = JSON.parse(Buffer.from(hex, 'hex').toString('utf-8'));
+    return hmac(body, options)
+  });
 }
 
 module.exports.templateTags = [{
@@ -80,7 +76,7 @@ module.exports.templateTags = [{
       placeholder: 'Message to hash (leave empty to use request body)'
     }
   ],
-  run(context, algorithm, encoding, removeWhitespace = false, jsonPath = '', key = '', value = '') {
+  async run(context, algorithm, encoding, removeWhitespace = false, jsonPath = '', key = '', value = '') {
     if (encoding !== 'hex' && encoding !== 'base64') {
       throw new Error(`Invalid encoding ${encoding}. Choices are hex, base64`);
     }
@@ -89,37 +85,42 @@ module.exports.templateTags = [{
     if (valueType !== 'string') {
       throw new Error(`Cannot hash value of type "${valueType}"`);
     }
-    
-    settings.key = key;
-    settings.algorithm = algorithm;
-    settings.encoding = encoding;
-    settings.removeWhitespace = removeWhitespace === true || removeWhitespace === 'true';
-    settings.jsonPath = jsonPath;
-    
+
+    const options = {
+      key: key,
+      algorithm: algorithm,
+      encoding: encoding,
+      jsonPath: jsonPath !== '' ? jsonPath : undefined,
+      removeWhitespace: removeWhitespace === true || removeWhitespace === 'true' ? true : undefined
+    };
+
     if (value === '') {
-      return replacementContent;
+      return replacementContent + ' (' + Buffer.from(JSON.stringify(options)).toString('hex') + ')';
     } else {
-      return hmac(value);
+      return hmac(value, options);
     }
   }
 }];
 
 module.exports.requestHooks = [
-  context => {
+  async context => {
     if (context.request.getUrl().indexOf(replacementContent) !== -1) {
-      context.request.setUrl(replaceWithHMAC(context.request.getUrl(), context.request.getBodyText()));
+      context.request.setUrl(replaceWithHMAC(context.request.getUrl(), context.request.getBody().text));
     }
-    if (context.request.getBodyText().indexOf(replacementContent) !== -1) {
-      context.request.setBodyText(replaceWithHMAC(context.request.getBodyText(), context.request.getBodyText()));
+    if (context.request.getBody().text.indexOf(replacementContent) !== -1) {
+      context.request.setBody({
+        ...body,
+        text: replaceWithHMAC(context.request.getBody().text, context.request.getBody().text),
+      });
     }
     context.request.getHeaders().forEach(h => {
       if (h.value.indexOf(replacementContent) !== -1) {
-        context.request.setHeader(h.name, replaceWithHMAC(h.value, context.request.getBodyText()));
+        context.request.setHeader(h.name, replaceWithHMAC(h.value, context.request.getBody().text));
       }
     });
     context.request.getParameters().forEach(p => {
       if (p.value.indexOf(replacementContent) !== -1) {
-        context.request.setParameter(p.name, replaceWithHMAC(p.value, context.request.getBodyText()));
+        context.request.setParameter(p.name, replaceWithHMAC(p.value, context.request.getBody().text));
       }
     });
   }
