@@ -19,6 +19,9 @@
       "name": "John Wästerlund",
       "icon": "https://www.gravatar.com/avatar/de986eec8e60cbe1320969ae26339483.jpg"
     },
+    "images": {
+      "icon": "icon.svg"
+    },
     "unlisted": false
   }
 }
