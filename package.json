@@ -16,7 +16,9 @@
     "displayName": "Request Body HMAC Signature Generator",
     "description": "Generates HMAC signatures for request bodies and values",
     "publisher": {
-      "name": "John Wästerlund"
-    }
+      "name": "John Wästerlund",
+      "icon": "https://www.gravatar.com/avatar/de986eec8e60cbe1320969ae26339483.jpg"
+    },
+    "unlisted": false
   }
 }
