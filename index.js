@@ -104,23 +104,24 @@ module.exports.templateTags = [{
 
 module.exports.requestHooks = [
   async context => {
+    const body = context.request.getBody();
     if (context.request.getUrl().indexOf(replacementContent) !== -1) {
-      context.request.setUrl(replaceWithHMAC(context.request.getUrl(), context.request.getBody().text));
+      context.request.setUrl(replaceWithHMAC(context.request.getUrl(), body.text));
     }
-    if (context.request.getBody().text.indexOf(replacementContent) !== -1) {
+    if (body.text.indexOf(replacementContent) !== -1) {
       context.request.setBody({
         ...body,
-        text: replaceWithHMAC(context.request.getBody().text, context.request.getBody().text),
+        text: replaceWithHMAC(body.text, body.text),
       });
     }
     context.request.getHeaders().forEach(h => {
       if (h.value.indexOf(replacementContent) !== -1) {
-        context.request.setHeader(h.name, replaceWithHMAC(h.value, context.request.getBody().text));
+        context.request.setHeader(h.name, replaceWithHMAC(h.value, body.text));
       }
     });
     context.request.getParameters().forEach(p => {
       if (p.value.indexOf(replacementContent) !== -1) {
-        context.request.setParameter(p.name, replaceWithHMAC(p.value, context.request.getBody().text));
+        context.request.setParameter(p.name, replaceWithHMAC(p.value, body.text));
       }
     });
   }
