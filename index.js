@@ -105,7 +105,7 @@ module.exports.templateTags = [{
 module.exports.requestHooks = [
   async context => {
     const body = context.request.getBody();
-    let bodyText = body.text;
+    let bodyText = body.text || '';
     if (bodyText.indexOf(replacementContent) !== -1) {
       bodyText = replaceWithHMAC(bodyText, bodyText);
       context.request.setBody({
